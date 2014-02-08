@@ -72,7 +72,7 @@ describe Controller, type: :controller do
       end
 
       it 'should raise an error if custom validation fails' do
-        Fridge.configuration.validator = -> (token) { false }
+        Fridge.configuration.validator = ->(token) { false }
         expect { controller.current_token }.to raise_error Fridge::InvalidToken
       end
 

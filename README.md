@@ -23,7 +23,7 @@ And then run `bundle install`.
 | `private_key` | Private token signing key | A PEM-formatted key |
 | `public_key` | Public token verification key (the private key's complement) | A PEM-formatted key |
 | `signing_algorithm` | Algorithm to use for sigining and verification | `RS512`, `RS256` |
-| `validator` | A lambda used to perform custom validation of tokens  | Any `Proc` |
+| `validator` | A lambda used to perform custom validation of tokens | Any `Proc` |
 
 Resource servers must configure a public key corresponding to an authorization server, in order to verify tokens issued by that server. Authorization servers must configure a private key.
 
