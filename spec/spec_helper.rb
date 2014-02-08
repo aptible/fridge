@@ -8,3 +8,7 @@ end
 
 # Require library up front
 require 'fridge'
+
+RSpec.configure do |config|
+  config.before { Fridge.configuration.reset }
+end
