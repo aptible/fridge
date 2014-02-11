@@ -2,11 +2,13 @@ require 'jwt'
 
 module Fridge
   class AccessToken
-    attr_accessor :id, :issuer, :subject, :scope, :expires_at
+    attr_accessor :id, :issuer, :subject, :scope, :expires_at, :jwt
 
+    # rubocop:disable MethodLength
     def initialize(jwt_or_options = nil)
       options = case jwt_or_options
                 when String
+                  self.jwt = jwt_or_options
                   validate_public_key!
                   decode_and_verify(jwt_or_options)
                 when Hash then jwt_or_options
@@ -16,8 +18,14 @@ module Fridge
         instance_variable_set("@#{key}", value)
       end
     end
+    # rubocop:enable MethodLength
+
+    def to_s
+      serialize
+    end
 
     def serialize
+      return jwt if jwt
       validate_parameters!
       validate_private_key!
       encode_and_sign
