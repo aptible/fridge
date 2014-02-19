@@ -52,8 +52,8 @@ module Fridge
         scope: hash['scope'],
         expires_at: Time.at(hash['exp'])
       }
-      rescue JWT::DecodeError
-        raise InvalidToken, 'Invalid access token'
+    rescue JWT::DecodeError
+      raise InvalidToken, 'Invalid access token'
     end
 
     def valid?
