@@ -32,7 +32,7 @@ describe Fridge::AccessToken do
     let(:options) do
       {
         id: SecureRandom.uuid,
-        iss: 'https://auth.aptible.com',
+        issuer: 'https://auth.aptible.com',
         subject: "https://auth.aptible.com/users/#{SecureRandom.uuid}",
         scope: 'read',
         expires_at: Time.now + 3600
@@ -84,6 +84,14 @@ describe Fridge::AccessToken do
       expect(copy.subject).to eq subject.subject
       expect(copy.expires_at.to_i).to eq subject.expires_at.to_i
       expect(copy.scope).to eq subject.scope
+    end
+
+    it 'should include custom attributes' do
+      subject = described_class.new(options.merge(foo: 'bar'))
+      copy = described_class.new(subject.serialize)
+
+      expect(copy.attributes[:foo]).to eq 'bar'
+      expect(copy.foo).to eq 'bar'
     end
 
     it 'should raise an error if required attributes are missing' do

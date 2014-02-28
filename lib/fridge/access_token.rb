@@ -2,7 +2,8 @@ require 'jwt'
 
 module Fridge
   class AccessToken
-    attr_accessor :id, :issuer, :subject, :scope, :expires_at, :jwt
+    attr_accessor :id, :issuer, :subject, :scope, :expires_at,
+                  :jwt, :attributes
 
     # rubocop:disable MethodLength
     def initialize(jwt_or_options = nil)
@@ -14,9 +15,11 @@ module Fridge
                 when Hash then jwt_or_options
                 else {}
                 end
-      options.each do |key, value|
-        instance_variable_set("@#{key}", value)
+      [:id, :issuer, :subject, :scope, :expires_at].each do |key|
+        send "#{key}=", options.delete(key)
       end
+      self.attributes = options.reject { |k, v| v.nil? }
+      attributes.symbolize_keys!
     end
     # rubocop:enable MethodLength
 
@@ -38,23 +41,26 @@ module Fridge
         sub: subject,
         scope: scope,
         exp: expires_at.to_i
-      }, private_key, algorithm)
+      }.merge(attributes), private_key, algorithm)
     rescue
       raise SerializationError, 'Invalid private key or signing algorithm'
     end
 
+    # rubocop:disable MethodLength
     def decode_and_verify(jwt)
       hash = JWT.decode(jwt, public_key)
-      {
-        id: hash['id'],
-        issuer: hash['iss'],
-        subject: hash['sub'],
-        scope: hash['scope'],
-        expires_at: Time.at(hash['exp'])
+      base = {
+        id: hash.delete('id'),
+        issuer: hash.delete('iss'),
+        subject: hash.delete('sub'),
+        scope: hash.delete('scope'),
+        expires_at: Time.at(hash.delete('exp'))
       }
+      base.merge(hash)
     rescue JWT::DecodeError
       raise InvalidToken, 'Invalid access token'
     end
+    # rubocop:enable MethodLength
 
     def valid?
       !expired?
@@ -90,6 +96,14 @@ module Fridge
     end
 
     protected
+
+    def method_missing(method, *args, &block)
+      if attributes.key?(method)
+        attributes[method]
+      else
+        super
+      end
+    end
 
     def validate_parameters!
       [:subject, :expires_at].each do |attribute|

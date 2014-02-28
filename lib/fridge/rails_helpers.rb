@@ -43,8 +43,11 @@ module Fridge
 
     # Validates token, and raises an exception if invalid
     def validate_token!(access_token)
-      validate_token(access_token).tap do |token|
-        fail InvalidToken unless token
+      validator = Fridge.configuration.validator
+      if validator.call(access_token)
+        access_token
+      else
+        fail InvalidToken
       end
     end
 
