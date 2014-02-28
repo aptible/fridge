@@ -99,27 +99,74 @@ describe Controller, type: :controller do
 
     describe '#session_token' do
       it 'should delete all cookies on error' do
-        cookies[:session_token] = 'foobar'
+        cookies[:fridge_session] = 'foobar'
         controller.session_token
-        expect(cookies.deleted?(:session_token, domain: :all)).to be_true
+        expect(cookies.deleted?(:fridge_session, domain: :all)).to be_true
       end
 
       it 'should return nil on error' do
-        cookies[:session_token] = 'foobar'
+        cookies[:fridge_session] = 'foobar'
         expect(controller.session_token).to be_nil
       end
 
-      it 'should return the token stored in :session_token' do
-        cookies[:session_token] = access_token.serialize
+      it 'should return the token stored in :fridge_session' do
+        cookies[:fridge_session] = access_token.serialize
         expect(controller.session_token.id).to eq access_token.id
       end
     end
 
-    describe '#store_session_token' do
+    describe '#validate_token' do
+      it 'should return false if the token is invalid' do
+        Fridge.configuration.validator = ->(token) { false }
+        expect(controller.validate_token(access_token)).to be_false
+      end
+
+      it 'should return false if the token validator fails' do
+        Fridge.configuration.validator = ->(token) { fail 'Foobar' }
+        expect(controller.validate_token(access_token)).to be_false
+      end
+
+      it 'should return the token if valid' do
+        Fridge.configuration.validator = ->(token) { true }
+        expect(controller.validate_token(access_token)).to eq access_token
+      end
+    end
+
+    describe '#validate_token' do
+      it 'should raise an exception if the token is invalid' do
+        Fridge.configuration.validator = ->(token) { false }
+        expect { controller.validate_token!(access_token) }.to raise_error
+      end
+
+      it 'should return the token if valid' do
+        Fridge.configuration.validator = ->(token) { true }
+        expect(controller.validate_token!(access_token)).to eq access_token
+      end
+    end
+
+    describe '#sessionize_token' do
       it 'should set a session cookie' do
         Rails.stub_chain(:env, :development?) { false }
-        controller.store_session_token(access_token)
-        expect(cookies[:session_token]).to eq access_token.serialize
+        controller.sessionize_token(access_token)
+        expect(cookies[:fridge_session]).to eq access_token.serialize
+      end
+    end
+
+    describe '#fridge_cookie_name' do
+      it 'is configurable' do
+        Fridge.configuration.cookie_name = 'foobar'
+        expect(controller.fridge_cookie_name).to eq 'foobar'
+      end
+    end
+
+    describe '#fridge_cookie_options' do
+      before { Rails.stub_chain(:env, :development?) { false } }
+
+      it 'are configurable' do
+        Fridge.configuration.cookie_options = { foobar: true }
+        options = controller.fridge_cookie_options
+        expect(options[:domain]).to eq :all
+        expect(options[:foobar]).to eq true
       end
     end
   end

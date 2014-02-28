@@ -25,39 +25,61 @@ module Fridge
     end
 
     def session_token
-      return unless cookies[:session_token]
-      @session_token = AccessToken.new(cookies[:session_token]).tap do |token|
+      return unless session_cookie
+      @session_token ||= AccessToken.new(session_cookie).tap do |token|
         validate_token!(token)
       end
     rescue
-      clear_session_token
-      @session_token = nil
+      clear_session_cookie
     end
 
-    def validate_token!(access_token)
+    # Validates token, and returns the token, or nil
+    def validate_token(access_token)
       validator = Fridge.configuration.validator
-      fail InvalidToken unless validator.call(access_token)
+      validator.call(access_token) && access_token
+    rescue
+      false
     end
 
-    def store_session_token(access_token)
+    # Validates token, and raises an exception if invalid
+    def validate_token!(access_token)
+      validate_token(access_token).tap do |token|
+        fail InvalidToken unless token
+      end
+    end
+
+    def sessionize_token(access_token)
       # Ensure that any cookie-persisted tokens are read-only
       access_token.scope = 'read'
 
       jwt = access_token.serialize
-      cookies[:session_token] = cookie_options.merge(
+      self.session_cookie = {
         value: jwt,
-        expires_at: access_token.expires_at
-      )
+        expires: access_token.expires_at
+      }.merge(fridge_cookie_options)
     end
 
-    def clear_session_token
-      cookies.delete :session_token, domain: :all
+    def session_cookie
+      cookies[fridge_cookie_name]
+    end
+
+    def session_cookie=(cookie)
+      cookies[fridge_cookie_name] = cookie
+    end
+
+    def clear_session_cookie
+      cookies.delete fridge_cookie_name, domain: :all
       nil
     end
 
-    def cookie_options
+    def fridge_cookie_name
+      Fridge.configuration.cookie_name
+    end
+
+    def fridge_cookie_options
       secure = !Rails.env.development?
-      { domain: :all, secure: secure, httponly: true }
+      options = { domain: :all, secure: secure, httponly: true }
+      options.merge(Fridge.configuration.cookie_options)
     end
   end
 end

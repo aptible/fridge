@@ -19,5 +19,8 @@ module Fridge
     # A validator must raise an exception or return a false value for an
     # invalid token
     has :validator, classes: [Proc], default: ->(token) { token.valid? }
+
+    has :cookie_name, classes: [String, Symbol], default: :fridge_session
+    has :cookie_options, classes: [Hash], default: {}
   end
 end
