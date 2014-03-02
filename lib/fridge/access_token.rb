@@ -1,4 +1,5 @@
 require 'jwt'
+require 'active_support'
 
 module Fridge
   class AccessToken
@@ -19,7 +20,7 @@ module Fridge
         send "#{key}=", options.delete(key)
       end
       self.attributes = options.reject { |k, v| v.nil? }
-      attributes.symbolize_keys!
+      self.attributes = Hash[attributes.map { |k, v| [k.to_sym, v] }]
     end
     # rubocop:enable MethodLength
 
