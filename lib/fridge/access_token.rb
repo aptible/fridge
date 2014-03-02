@@ -1,5 +1,4 @@
 require 'jwt'
-require 'active_support'
 
 module Fridge
   class AccessToken
