@@ -1,5 +1,12 @@
 module Fridge
   module RailsHelpers
+    extend ActiveSupport::Concern
+
+    included do
+      helper_method :write_shared_cookie, :fetch_shared_cookie,
+                    :read_shared_cookie
+    end
+
     def token_scope
       current_token.scope if current_token
     end
@@ -73,6 +80,24 @@ module Fridge
     def clear_session_cookie
       cookies.delete fridge_cookie_name, domain: :all
       nil
+    end
+
+    def write_shared_cookie(name, value)
+      fail 'Can only write string cookie values' unless value.is_a?(String)
+
+      cookies[name] = {
+        value: value,
+        expires: 1.year.from_now
+      }.merge(fridge_cookie_options)
+    end
+
+    def read_shared_cookie(name)
+      cookies[name]
+    end
+
+    def fetch_shared_cookie(name, &block)
+      return read_shared_cookie(name) if read_shared_cookie(name)
+      write_shared_cookie(block.call)
     end
 
     def fridge_cookie_name
