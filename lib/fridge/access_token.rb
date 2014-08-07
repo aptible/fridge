@@ -18,7 +18,7 @@ module Fridge
       [:id, :issuer, :subject, :scope, :expires_at].each do |key|
         send "#{key}=", options.delete(key)
       end
-      self.attributes = options.reject { |k, v| v.nil? }
+      self.attributes = options.reject { |_, v| v.nil? }
       self.attributes = Hash[attributes.map { |k, v| [k.to_sym, v] }]
     end
     # rubocop:enable MethodLength
@@ -107,9 +107,8 @@ module Fridge
 
     def validate_parameters!
       [:subject, :expires_at].each do |attribute|
-        unless send(attribute)
-          fail SerializationError, "Missing attribute: #{attribute}"
-        end
+        next if send(attribute)
+        fail SerializationError, "Missing attribute: #{attribute}"
       end
     end
 

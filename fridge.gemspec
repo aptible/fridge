@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.version       = Fridge::VERSION
   spec.authors       = ['Frank Macreery']
   spec.email         = ['frank@macreery.com']
-  spec.description   = %q{Token validation for distributed resource servers}
-  spec.summary       = %q{Token validation for distributed resource servers}
+  spec.description   = 'Token validation for distributed resource servers'
+  spec.summary       = 'Token validation for distributed resource servers'
   spec.homepage      = 'https://github.com/aptible/fridge'
   spec.license       = 'MIT'
 
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'gem_config'
-  spec.add_dependency 'jwt'
+  spec.add_dependency 'jwt', '~> 0.1.13'
 
   spec.add_development_dependency 'bundler', '~> 1.5'
   spec.add_development_dependency 'aptible-tasks'

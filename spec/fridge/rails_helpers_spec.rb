@@ -72,7 +72,7 @@ describe Controller, type: :controller do
       end
 
       it 'should raise an error if custom validation fails' do
-        Fridge.configuration.validator = ->(token) { false }
+        Fridge.configuration.validator = ->(_) { false }
         expect { controller.current_token }.to raise_error Fridge::InvalidToken
       end
 
@@ -117,29 +117,29 @@ describe Controller, type: :controller do
 
     describe '#validate_token' do
       it 'should return false if the token is invalid' do
-        Fridge.configuration.validator = ->(token) { false }
+        Fridge.configuration.validator = ->(_) { false }
         expect(controller.validate_token(access_token)).to be_false
       end
 
       it 'should return false if the token validator fails' do
-        Fridge.configuration.validator = ->(token) { fail 'Foobar' }
+        Fridge.configuration.validator = ->(_) { fail 'Foobar' }
         expect(controller.validate_token(access_token)).to be_false
       end
 
       it 'should return the token if valid' do
-        Fridge.configuration.validator = ->(token) { true }
+        Fridge.configuration.validator = ->(_) { true }
         expect(controller.validate_token(access_token)).to eq access_token
       end
     end
 
     describe '#validate_token' do
       it 'should raise an exception if the token is invalid' do
-        Fridge.configuration.validator = ->(token) { false }
+        Fridge.configuration.validator = ->(_) { false }
         expect { controller.validate_token!(access_token) }.to raise_error
       end
 
       it 'should return the token if valid' do
-        Fridge.configuration.validator = ->(token) { true }
+        Fridge.configuration.validator = ->(_) { true }
         expect(controller.validate_token!(access_token)).to eq access_token
       end
     end

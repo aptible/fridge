@@ -47,13 +47,14 @@ describe Fridge::AccessToken do
     subject { described_class.new(options) }
 
     it 'should return a JWT comprised of token attributes' do
-      expect(subject.serialize).to eq JWT.encode({
+      hash = {
         id: subject.id,
         iss: subject.issuer,
         sub: subject.subject,
         scope: subject.scope,
         exp: subject.expires_at.to_i
-      }, private_key, 'RS512')
+      }
+      expect(subject.serialize).to eq JWT.encode(hash, private_key, 'RS512')
     end
 
     it 'should be verifiable with the application public key' do
