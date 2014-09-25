@@ -82,12 +82,12 @@ module Fridge
       nil
     end
 
-    def write_shared_cookie(name, value)
+    def write_shared_cookie(name, value, options = {})
       fail 'Can only write string cookie values' unless value.is_a?(String)
 
       cookies[name] = {
         value: value,
-        expires: 1.year.from_now
+        expires: options[:expires] || 1.year.from_now
       }.merge(fridge_cookie_options)
     end
 
