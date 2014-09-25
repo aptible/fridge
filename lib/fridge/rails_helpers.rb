@@ -100,6 +100,10 @@ module Fridge
       write_shared_cookie(block.call)
     end
 
+    def delete_shared_cookie(name)
+      cookies.delete name, fridge_cookie_options.slice(:domain)
+    end
+
     def fridge_cookie_name
       Fridge.configuration.cookie_name
     end
