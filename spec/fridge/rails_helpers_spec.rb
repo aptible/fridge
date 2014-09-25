@@ -6,6 +6,9 @@ require 'rspec/rails'
 # http://say26.com/rspec-testing-controllers-outside-of-a-rails-application
 describe Controller, type: :controller do
   context Fridge::RailsHelpers do
+    let(:organization_url) do
+      "https://auth.aptible.com/users/#{SecureRandom.uuid}"
+    end
     let(:private_key) { OpenSSL::PKey::RSA.new(1024) }
     let(:public_key) { OpenSSL::PKey::RSA.new(private_key.public_key) }
 
@@ -156,6 +159,34 @@ describe Controller, type: :controller do
       it 'is configurable' do
         Fridge.configuration.cookie_name = 'foobar'
         expect(controller.fridge_cookie_name).to eq 'foobar'
+      end
+    end
+
+    describe '#write_shared_cookie' do
+      before { Rails.stub_chain(:env, :development?) { false } }
+
+      it 'should save cookie' do
+        controller.write_shared_cookie(:organization_url, organization_url)
+        expect(cookies[:organization_url]).to eq organization_url
+      end
+    end
+
+    describe '#read_shared_cookie' do
+      it 'should read cookie' do
+        cookies[:organization_url] = { value: organization_url }
+        expect(controller.read_shared_cookie(:organization_url)).to(
+          eq organization_url
+        )
+      end
+    end
+
+    describe '#delete_shared_cookie' do
+      before { Rails.stub_chain(:env, :development?) { false } }
+
+      it 'should delete cookie' do
+        controller.write_shared_cookie(:organization_url, organization_url)
+        controller.delete_shared_cookie(:organization_url)
+        expect(cookies[:organization_url]).to be_nil
       end
     end
 
