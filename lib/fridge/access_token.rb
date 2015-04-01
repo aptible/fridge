@@ -62,6 +62,10 @@ module Fridge
     end
     # rubocop:enable MethodLength
 
+    def downgrade
+      self.scope = 'read'
+    end
+
     def valid?
       !expired?
     end

@@ -116,6 +116,20 @@ describe Controller, type: :controller do
         cookies[:fridge_session] = access_token.serialize
         expect(controller.session_token.id).to eq access_token.id
       end
+
+      context 'with a non-:read scope' do
+        before { options.merge!(scope: 'manage') }
+
+        it 'should downgrade the token' do
+          cookies[:fridge_session] = access_token.serialize
+          expect(controller.session_token.scope).to eq 'read'
+        end
+
+        it 'should not change the validity of a token' do
+          cookies[:fridge_session] = access_token.serialize
+          expect(controller.session_token).to be_valid
+        end
+      end
     end
 
     describe '#validate_token' do
