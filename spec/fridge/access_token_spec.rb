@@ -117,4 +117,10 @@ describe Fridge::AccessToken do
       expect(subject).not_to be_expired
     end
   end
+
+  describe '#downgrade' do
+    it 'sets the token scope to :read' do
+      expect { subject.downgrade }.to change(subject, :scope).to('read')
+    end
+  end
 end

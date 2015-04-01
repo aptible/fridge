@@ -34,7 +34,7 @@ module Fridge
     def session_token
       return unless session_cookie
       @session_token ||= AccessToken.new(session_cookie).tap do |token|
-        validate_token!(token)
+        validate_token!(token).downgrade
       end
     rescue
       clear_session_cookie
