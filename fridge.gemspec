@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($RS)
-  spec.test_files    = spec.files.grep(/^spec\//)
+  spec.test_files    = spec.files.grep(%r{^spec/})
   spec.require_paths = ['lib']
 
   spec.add_dependency 'gem_config'
