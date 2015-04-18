@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'json'
 
 describe Fridge::AccessToken do
   describe '#initialize' do
@@ -24,6 +25,14 @@ describe Fridge::AccessToken do
 
     it 'should raise an error on an incorrectly signed JWT' do
       jwt = JWT.encode({ id: 'foobar' }, OpenSSL::PKey::RSA.new(1024), 'RS512')
+      expect { described_class.new(jwt) }.to raise_error Fridge::InvalidToken
+    end
+
+    # http://bit.ly/jwt-none-vulnerability
+    it 'should raise an error with { "alg": "none" }' do
+      jwt = "#{Base64.encode64({ typ: 'JWT', alg: 'none' }.to_json).chomp}." \
+            "#{Base64.encode64({ id: 'foobar' }.to_json).chomp}"
+      expect(JWT.decode(jwt, nil, false)).to eq('id' => 'foobar')
       expect { described_class.new(jwt) }.to raise_error Fridge::InvalidToken
     end
   end
