@@ -104,7 +104,7 @@ describe Controller, type: :controller do
       it 'should delete all cookies on error' do
         cookies[:fridge_session] = 'foobar'
         controller.session_token
-        expect(cookies.deleted?(:fridge_session, domain: :all)).to be_true
+        expect(cookies.deleted?(:fridge_session, domain: :all)).to be true
       end
 
       it 'should return nil on error' do
@@ -135,12 +135,12 @@ describe Controller, type: :controller do
     describe '#validate_token' do
       it 'should return false if the token is invalid' do
         Fridge.configuration.validator = ->(_) { false }
-        expect(controller.validate_token(access_token)).to be_false
+        expect(controller.validate_token(access_token)).to be false
       end
 
       it 'should return false if the token validator fails' do
         Fridge.configuration.validator = ->(_) { fail 'Foobar' }
-        expect(controller.validate_token(access_token)).to be_false
+        expect(controller.validate_token(access_token)).to be false
       end
 
       it 'should return the token if valid' do
