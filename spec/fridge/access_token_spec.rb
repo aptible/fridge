@@ -112,12 +112,13 @@ describe Fridge::AccessToken do
     it 'should encode and decode :actor as :act' do
       # The `act` field can recursively encode additional
       # claims, so we check those too.
-      actor = { sub: 'foo', act: { sub: 'bar' } }
+      actor = { subject: 'foo', username: 'test', actor: { subject: 'bar' } }
       subject = described_class.new(options.merge(actor: actor))
 
       # The JWT lib will return everything as strings, so we'll
       # test that, although eventually we'll want to see symbols back.
-      actor_s = { 'sub' => 'foo', 'act' => { 'sub' => 'bar' } }
+      actor_s = { 'sub' => 'foo', 'username' => 'test',
+                  'act' => { 'sub' => 'bar' } }
       hash = JWT.decode(subject.serialize, public_key)
       expect(hash['act']).to eq(actor_s)
 
