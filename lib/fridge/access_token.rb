@@ -2,7 +2,7 @@ require 'jwt'
 
 module Fridge
   class AccessToken
-    attr_accessor :id, :issuer, :subject, :scope, :expires_at,
+    attr_accessor :id, :issuer, :subject, :scope, :expires_at, :actor,
                   :jwt, :attributes
 
     # rubocop:disable MethodLength
@@ -18,8 +18,10 @@ module Fridge
       [:id, :issuer, :subject, :scope, :expires_at].each do |key|
         send "#{key}=", options.delete(key)
       end
+      self.actor = nested_hash_keys_to_sym(options.delete(:actor))
+
       self.attributes = options.reject { |_, v| v.nil? }
-      self.attributes = Hash[attributes.map { |k, v| [k.to_sym, v] }]
+      self.attributes = nested_hash_keys_to_sym(attributes)
     end
     # rubocop:enable MethodLength
 
@@ -35,13 +37,16 @@ module Fridge
     end
 
     def encode_and_sign
-      JWT.encode({
+      h = {
         id: id,
         iss: issuer,
         sub: subject,
         scope: scope,
         exp: expires_at.to_i
-      }.merge(attributes), private_key, algorithm)
+      }
+      h[:act] = actor if actor
+      h.merge!(attributes)
+      JWT.encode(h, private_key, algorithm)
     rescue
       raise SerializationError, 'Invalid private key or signing algorithm'
     end
@@ -54,7 +59,8 @@ module Fridge
         issuer: hash.delete('iss'),
         subject: hash.delete('sub'),
         scope: hash.delete('scope'),
-        expires_at: Time.at(hash.delete('exp'))
+        expires_at: Time.at(hash.delete('exp')),
+        actor: hash.delete('act')
       }
       base.merge(hash)
     rescue JWT::DecodeError
@@ -122,6 +128,11 @@ module Fridge
 
     def validate_public_key!
       fail SerializationError, 'No public key configured' unless public_key
+    end
+
+    def nested_hash_keys_to_sym(h)
+      return h unless h.is_a? Hash
+      Hash[h.map { |k, v| [k.to_sym, nested_hash_keys_to_sym(v)] }]
     end
   end
 end
