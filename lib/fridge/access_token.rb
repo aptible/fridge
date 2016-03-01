@@ -2,7 +2,7 @@ require 'jwt'
 
 module Fridge
   class AccessToken
-    attr_accessor :id, :issuer, :subject, :scope, :expires_at,
+    attr_accessor :id, :issuer, :subject, :scope, :expires_at, :actor,
                   :jwt, :attributes
 
     # rubocop:disable MethodLength
@@ -15,11 +15,11 @@ module Fridge
                 when Hash then jwt_or_options
                 else {}
                 end
-      [:id, :issuer, :subject, :scope, :expires_at].each do |key|
+
+      [:id, :issuer, :subject, :scope, :expires_at, :actor].each do |key|
         send "#{key}=", options.delete(key)
       end
-      self.attributes = options.reject { |_, v| v.nil? }
-      self.attributes = Hash[attributes.map { |k, v| [k.to_sym, v] }]
+      self.attributes = options
     end
     # rubocop:enable MethodLength
 
@@ -35,13 +35,13 @@ module Fridge
     end
 
     def encode_and_sign
-      JWT.encode({
-        id: id,
-        iss: issuer,
-        sub: subject,
-        scope: scope,
-        exp: expires_at.to_i
-      }.merge(attributes), private_key, algorithm)
+      h = {}
+      [:id, :issuer, :subject, :scope, :expires_at, :actor].each do |key|
+        h[key] = send(key)
+      end
+      h.merge!(attributes)
+      h = encode_for_jwt(h)
+      JWT.encode(h, private_key, algorithm)
     rescue
       raise SerializationError, 'Invalid private key or signing algorithm'
     end
@@ -49,14 +49,7 @@ module Fridge
     # rubocop:disable MethodLength
     def decode_and_verify(jwt)
       hash = JWT.decode(jwt, public_key)
-      base = {
-        id: hash.delete('id'),
-        issuer: hash.delete('iss'),
-        subject: hash.delete('sub'),
-        scope: hash.delete('scope'),
-        expires_at: Time.at(hash.delete('exp'))
-      }
-      base.merge(hash)
+      decode_from_jwt(hash)
     rescue JWT::DecodeError
       raise InvalidToken, 'Invalid access token'
     end
@@ -122,6 +115,50 @@ module Fridge
 
     def validate_public_key!
       fail SerializationError, 'No public key configured' unless public_key
+    end
+
+    # Internally, we use "subject" to refer to "sub", and so on. We also
+    # represent some objects (expiry) differently. These functions do the
+    # mapping from Fridge to JWT and vice-versa.
+
+    def encode_for_jwt(hash)
+      out = {
+        id: hash.delete(:id),
+        iss: hash.delete(:issuer),
+        sub: hash.delete(:subject),
+        scope: hash.delete(:scope)
+      }.delete_if { |_, v| v.nil? }
+
+      # Unfortunately, nil.to_i returns 0, which means we can't
+      # easily clean out exp if we include it although it wasn't passed
+      # in like we do for other keys. So, we only include it if it's
+      # actually passed in and non-nil. Either way, we delete the keys.
+      hash.delete(:expires_at).tap { |e| out[:exp] = e.to_i if e }
+      hash.delete(:actor).tap { |a| out[:act] = encode_for_jwt(a) if a }
+
+      # Extra attributes passed through as-is
+      out.merge!(hash)
+
+      out
+    end
+
+    def decode_from_jwt(hash)
+      out = {
+        id: hash.delete('id'),
+        issuer: hash.delete('iss'),
+        subject: hash.delete('sub'),
+        scope: hash.delete('scope')
+      }.delete_if { |_, v| v.nil? }
+
+      hash.delete('exp').tap { |e| out[:expires_at] = Time.at(e) if e }
+      hash.delete('act').tap { |a| out[:actor] = decode_from_jwt(a) if a }
+
+      # Extra attributes
+      hash.delete_if { |_, v| v.nil? }
+      hash = Hash[hash.map { |k, v| [k.to_sym, v] }]
+      out.merge!(hash)
+
+      out
     end
   end
 end

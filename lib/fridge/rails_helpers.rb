@@ -15,6 +15,10 @@ module Fridge
       current_token.subject if current_token
     end
 
+    def token_actor
+      current_token.actor if current_token
+    end
+
     def current_token
       return unless bearer_token
       @current_token ||= AccessToken.new(bearer_token).tap do |token|
@@ -29,6 +33,10 @@ module Fridge
 
     def session_subject
       session_token.subject if session_token
+    end
+
+    def session_actor
+      session_token.actor if session_token
     end
 
     def session_token

@@ -108,6 +108,24 @@ describe Fridge::AccessToken do
       subject.subject = nil
       expect { subject.serialize }.to raise_error Fridge::SerializationError
     end
+
+    it 'should encode and decode :actor as :act' do
+      # The `act` field can recursively encode additional
+      # claims, so we check those too.
+      actor = { subject: 'foo', username: 'test', actor: { subject: 'bar' } }
+      subject = described_class.new(options.merge(actor: actor))
+
+      # The JWT lib will return everything as strings, so we'll
+      # test that, although eventually we'll want to see symbols back.
+      actor_s = { 'sub' => 'foo', 'username' => 'test',
+                  'act' => { 'sub' => 'bar' } }
+      hash = JWT.decode(subject.serialize, public_key)
+      expect(hash['act']).to eq(actor_s)
+
+      # Now, check that we properly get symbols back
+      new = described_class.new(subject.serialize)
+      expect(new.actor).to eq(actor)
+    end
   end
 
   describe '#expired?' do
