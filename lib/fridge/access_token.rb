@@ -48,8 +48,8 @@ module Fridge
 
     # rubocop:disable MethodLength
     def decode_and_verify(jwt)
-      hash = JWT.decode(jwt, public_key)
-      decode_from_jwt(hash)
+      payload, _header = JWT.decode(jwt, public_key, true, algorithm: algorithm)
+      decode_from_jwt(payload)
     rescue JWT::DecodeError
       raise InvalidToken, 'Invalid access token'
     end

@@ -14,7 +14,10 @@ describe Fridge::AccessToken do
     end
 
     it 'should accept a JWT' do
-      jwt = JWT.encode({ id: 'foobar', exp: 0 }, private_key, 'RS512')
+      jwt = JWT.encode(
+        { id: 'foobar', exp: Time.now.to_i + 10 },
+        private_key, 'RS512'
+      )
       access_token = described_class.new(jwt)
       expect(access_token.id).to eq 'foobar'
     end
@@ -32,7 +35,7 @@ describe Fridge::AccessToken do
     it 'should raise an error with { "alg": "none" }' do
       jwt = "#{Base64.encode64({ typ: 'JWT', alg: 'none' }.to_json).chomp}." \
             "#{Base64.encode64({ id: 'foobar' }.to_json).chomp}"
-      expect(JWT.decode(jwt, nil, false)).to eq('id' => 'foobar')
+      expect(JWT.decode(jwt, nil, false)[0]).to eq('id' => 'foobar')
       expect { described_class.new(jwt) }.to raise_error Fridge::InvalidToken
     end
   end
@@ -81,7 +84,7 @@ describe Fridge::AccessToken do
     end
 
     it 'should represent :exp in seconds since the epoch' do
-      hash = JWT.decode(subject.serialize, public_key)
+      hash, = JWT.decode(subject.serialize, public_key)
       expect(hash['exp']).to be_a Fixnum
     end
 
@@ -119,7 +122,7 @@ describe Fridge::AccessToken do
       # test that, although eventually we'll want to see symbols back.
       actor_s = { 'sub' => 'foo', 'username' => 'test',
                   'act' => { 'sub' => 'bar' } }
-      hash = JWT.decode(subject.serialize, public_key)
+      hash, = JWT.decode(subject.serialize, public_key)
       expect(hash['act']).to eq(actor_s)
 
       # Now, check that we properly get symbols back
