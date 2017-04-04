@@ -139,7 +139,7 @@ describe Controller, type: :controller do
       end
 
       it 'should return false if the token validator fails' do
-        Fridge.configuration.validator = ->(_) { fail 'Foobar' }
+        Fridge.configuration.validator = ->(_) { raise 'Foobar' }
         expect(controller.validate_token(access_token)).to be false
       end
 

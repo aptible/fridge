@@ -113,6 +113,8 @@ describe Fridge::AccessToken do
 
       expect(copy.attributes[:foo]).to eq 'bar'
       expect(copy.foo).to eq 'bar'
+      expect(copy.respond_to?(:foo)).to be_truthy
+      expect(copy.respond_to?(:bar)).to be_falsey
     end
 
     it 'should raise an error if required attributes are missing' do

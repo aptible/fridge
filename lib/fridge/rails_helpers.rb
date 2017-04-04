@@ -62,7 +62,7 @@ module Fridge
       if validator.call(access_token)
         access_token
       else
-        fail InvalidToken, 'Rejected by validator'
+        raise InvalidToken, 'Rejected by validator'
       end
     end
 
@@ -91,7 +91,7 @@ module Fridge
     end
 
     def write_shared_cookie(name, value, options = {})
-      fail 'Can only write string cookie values' unless value.is_a?(String)
+      raise 'Can only write string cookie values' unless value.is_a?(String)
 
       cookies[name] = {
         value: value,
@@ -103,9 +103,9 @@ module Fridge
       cookies[name]
     end
 
-    def fetch_shared_cookie(name, &block)
+    def fetch_shared_cookie(name)
       return read_shared_cookie(name) if read_shared_cookie(name)
-      write_shared_cookie(block.call)
+      write_shared_cookie(yield)
     end
 
     def delete_shared_cookie(name)

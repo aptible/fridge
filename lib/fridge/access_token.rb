@@ -5,7 +5,6 @@ module Fridge
     attr_accessor :id, :issuer, :subject, :scope, :expires_at, :actor,
                   :jwt, :attributes
 
-    # rubocop:disable MethodLength
     def initialize(jwt_or_options = nil)
       options = case jwt_or_options
                 when String
@@ -21,7 +20,6 @@ module Fridge
       end
       self.attributes = options
     end
-    # rubocop:enable MethodLength
 
     def to_s
       serialize
@@ -46,7 +44,6 @@ module Fridge
       raise SerializationError, 'Invalid private key or signing algorithm'
     end
 
-    # rubocop:disable MethodLength
     def decode_and_verify(jwt)
       payload, _header = JWT.decode(jwt, public_key, true, algorithm: algorithm)
       decode_from_jwt(payload)
@@ -55,7 +52,6 @@ module Fridge
     rescue JWT::DecodeError => e
       raise InvalidToken, e.message
     end
-    # rubocop:enable MethodLength
 
     def downgrade
       self.scope = 'read'
@@ -104,19 +100,23 @@ module Fridge
       end
     end
 
+    def respond_to_missing?(method, include_private = false)
+      attributes.key?(method) || super
+    end
+
     def validate_parameters!
       [:subject, :expires_at].each do |attribute|
         next if send(attribute)
-        fail SerializationError, "Missing attribute: #{attribute}"
+        raise SerializationError, "Missing attribute: #{attribute}"
       end
     end
 
     def validate_private_key!
-      fail SerializationError, 'No private key configured' unless private_key
+      raise SerializationError, 'No private key configured' unless private_key
     end
 
     def validate_public_key!
-      fail SerializationError, 'No public key configured' unless public_key
+      raise SerializationError, 'No public key configured' unless public_key
     end
 
     # Internally, we use "subject" to refer to "sub", and so on. We also
