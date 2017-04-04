@@ -31,6 +31,14 @@ describe Fridge::AccessToken do
       expect { described_class.new(jwt) }.to raise_error Fridge::InvalidToken
     end
 
+    it 'should raise an error on an expired JWT' do
+      jwt = JWT.encode(
+        { id: 'foobar', exp: Time.now.to_i - 10 },
+        private_key, 'RS512'
+      )
+      expect { described_class.new(jwt) }.to raise_error(Fridge::ExpiredToken)
+    end
+
     # http://bit.ly/jwt-none-vulnerability
     it 'should raise an error with { "alg": "none" }' do
       jwt = "#{Base64.encode64({ typ: 'JWT', alg: 'none' }.to_json).chomp}." \

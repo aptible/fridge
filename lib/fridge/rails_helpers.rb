@@ -62,7 +62,7 @@ module Fridge
       if validator.call(access_token)
         access_token
       else
-        fail InvalidToken
+        fail InvalidToken, 'Rejected by validator'
       end
     end
 
