@@ -50,10 +50,10 @@ module Fridge
     def decode_and_verify(jwt)
       payload, _header = JWT.decode(jwt, public_key, true, algorithm: algorithm)
       decode_from_jwt(payload)
-    rescue JWT::ExpiredSignature
-      raise ExpiredToken, 'Expired access token'
-    rescue JWT::DecodeError
-      raise InvalidToken, 'Invalid access token'
+    rescue JWT::ExpiredSignature => e
+      raise ExpiredToken, e.message
+    rescue JWT::DecodeError => e
+      raise InvalidToken, e.message
     end
     # rubocop:enable MethodLength
 
