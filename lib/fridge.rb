@@ -4,6 +4,7 @@ require 'fridge/version'
 require 'fridge/access_token'
 require 'fridge/serialization_error'
 require 'fridge/invalid_token'
+require 'fridge/expired_token'
 
 require 'fridge/railtie' if defined?(Rails)
 
