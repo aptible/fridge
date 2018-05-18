@@ -1,7 +1,3 @@
-require 'active_support/all'
-require 'action_controller'
-require 'action_dispatch'
-
 module Rails
   class App
     def env_config
