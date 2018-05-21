@@ -139,6 +139,17 @@ describe Fridge::AccessToken do
       new = described_class.new(subject.serialize)
       expect(new.actor).to eq(actor)
     end
+
+    it 'should be idempotent' do
+      subject = described_class.new(options)
+      expect(subject.serialize).to eq(subject.serialize)
+    end
+
+    it 'should be idempotent with an actor' do
+      actor = { subject: 'foo', username: 'test', actor: { subject: 'bar' } }
+      subject = described_class.new(options.merge(actor: actor))
+      expect(subject.serialize).to eq(subject.serialize)
+    end
   end
 
   describe '#expired?' do

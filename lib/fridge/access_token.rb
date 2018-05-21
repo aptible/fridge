@@ -124,6 +124,8 @@ module Fridge
     # mapping from Fridge to JWT and vice-versa.
 
     def encode_for_jwt(hash)
+      hash = hash.dup
+
       out = {
         id: hash.delete(:id),
         iss: hash.delete(:issuer),
@@ -145,6 +147,8 @@ module Fridge
     end
 
     def decode_from_jwt(hash)
+      hash = hash.dup
+
       out = {
         id: hash.delete('id'),
         issuer: hash.delete('iss'),
