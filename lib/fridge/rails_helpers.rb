@@ -21,6 +21,7 @@ module Fridge
 
     def current_token
       return unless bearer_token
+
       @current_token ||= AccessToken.new(bearer_token).tap do |token|
         validate_token!(token)
       end
@@ -41,10 +42,11 @@ module Fridge
 
     def session_token
       return unless session_cookie
+
       @session_token ||= AccessToken.new(session_cookie).tap do |token|
         validate_token!(token).downgrade
       end
-    rescue
+    rescue StandardError
       clear_session_cookie
     end
 
@@ -52,7 +54,7 @@ module Fridge
     def validate_token(access_token)
       validator = Fridge.configuration.validator
       validator.call(access_token) && access_token
-    rescue
+    rescue StandardError
       false
     end
 
@@ -105,6 +107,7 @@ module Fridge
 
     def fetch_shared_cookie(name)
       return read_shared_cookie(name) if read_shared_cookie(name)
+
       write_shared_cookie(yield)
     end
 

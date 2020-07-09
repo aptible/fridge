@@ -15,7 +15,7 @@ module Fridge
     has :private_key, classes: [String]
     has :public_key, classes: [String]
 
-    has :signing_algorithm, values: %w(RS512 RS256), default: 'RS512'
+    has :signing_algorithm, values: %w[RS512 RS256], default: 'RS512'
 
     # A validator must raise an exception or return a false value for an
     # invalid token

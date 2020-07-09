@@ -93,7 +93,7 @@ describe Fridge::AccessToken do
 
     it 'should represent :exp in seconds since the epoch' do
       hash, = JWT.decode(subject.serialize, public_key)
-      expect(hash['exp']).to be_a Fixnum
+      expect(hash['exp']).to be_a Integer
     end
 
     it 'should be deterministic' do

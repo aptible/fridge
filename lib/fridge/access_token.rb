@@ -27,6 +27,7 @@ module Fridge
 
     def serialize
       return jwt if jwt
+
       validate_parameters!
       validate_private_key!
       encode_and_sign
@@ -40,7 +41,7 @@ module Fridge
       h.merge!(attributes)
       h = encode_for_jwt(h)
       JWT.encode(h, private_key, algorithm)
-    rescue
+    rescue StandardError
       raise SerializationError, 'Invalid private key or signing algorithm'
     end
 
@@ -67,8 +68,9 @@ module Fridge
 
     def private_key
       return unless config.private_key
+
       @private_key ||= OpenSSL::PKey::RSA.new(config.private_key)
-    rescue
+    rescue StandardError
       nil
     end
 
@@ -78,7 +80,7 @@ module Fridge
       elsif config.public_key
         @public_key ||= OpenSSL::PKey::RSA.new(config.public_key)
       end
-    rescue
+    rescue StandardError
       nil
     end
 
@@ -107,6 +109,7 @@ module Fridge
     def validate_parameters!
       [:subject, :expires_at].each do |attribute|
         next if send(attribute)
+
         raise SerializationError, "Missing attribute: #{attribute}"
       end
     end

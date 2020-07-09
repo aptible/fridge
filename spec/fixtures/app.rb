@@ -6,6 +6,7 @@ module Rails
 
     def routes
       return @routes if defined?(@routes)
+
       @routes = ActionDispatch::Routing::RouteSet.new
       @routes.draw do
         resources :posts
@@ -15,6 +16,6 @@ module Rails
   end
 
   def self.application
-    @app ||= App.new
+    @application ||= App.new
   end
 end
