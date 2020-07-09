@@ -23,7 +23,8 @@ describe Fridge::AccessToken do
     end
 
     it 'should raise an error on an invalid JWT' do
-      expect { described_class.new('foobar') }.to raise_error
+      expect { described_class.new('foobar') }
+        .to raise_error Fridge::InvalidToken
     end
 
     it 'should raise an error on an incorrectly signed JWT' do
