@@ -15,7 +15,9 @@ module Fridge
     has :private_key, classes: [String]
     has :public_key, classes: [String]
 
+    # rubocop:disable Style/PercentLiteralDelimiters
     has :signing_algorithm, values: %w[RS512 RS256], default: 'RS512'
+    # rubocop:enable Style/PercentLiteralDelimiters
 
     # A validator must raise an exception or return a false value for an
     # invalid token
