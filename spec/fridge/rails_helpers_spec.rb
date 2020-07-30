@@ -152,7 +152,8 @@ describe Fridge::RailsHelpers do
   describe '#validate_token' do
     it 'should raise an exception if the token is invalid' do
       Fridge.configuration.validator = ->(_) { false }
-      expect { controller.validate_token!(access_token) }.to raise_error
+      expect { controller.validate_token!(access_token) }
+        .to raise_error Fridge::InvalidToken
     end
 
     it 'should return the token if valid' do

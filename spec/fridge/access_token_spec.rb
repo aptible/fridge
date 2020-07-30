@@ -23,7 +23,8 @@ describe Fridge::AccessToken do
     end
 
     it 'should raise an error on an invalid JWT' do
-      expect { described_class.new('foobar') }.to raise_error
+      expect { described_class.new('foobar') }
+        .to raise_error Fridge::InvalidToken
     end
 
     it 'should raise an error on an incorrectly signed JWT' do
@@ -93,7 +94,7 @@ describe Fridge::AccessToken do
 
     it 'should represent :exp in seconds since the epoch' do
       hash, = JWT.decode(subject.serialize, public_key)
-      expect(hash['exp']).to be_a Fixnum
+      expect(hash['exp']).to be_a Integer
     end
 
     it 'should be deterministic' do
