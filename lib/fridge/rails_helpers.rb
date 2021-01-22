@@ -88,7 +88,7 @@ module Fridge
     end
 
     def clear_session_cookie
-      cookies.delete fridge_cookie_name, domain: :all
+      cookies.delete fridge_cookie_name, domain: auth_domain
       nil
     end
 
@@ -121,8 +121,14 @@ module Fridge
 
     def fridge_cookie_options
       secure = !Rails.env.development?
-      options = { domain: :all, secure: secure, httponly: true }
+      options = { domain: auth_domain, secure: secure, httponly: true }
       options.merge(Fridge.configuration.cookie_options)
+    end
+
+    def auth_domain
+      Aptible::Auth.configuration.root_url.sub(%r{^https?://}, '')
+    rescue StandardError
+      'auth.aptible.com'
     end
   end
 end
