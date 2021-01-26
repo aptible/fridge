@@ -104,7 +104,8 @@ describe Fridge::RailsHelpers do
     it 'should delete all cookies on error' do
       cookies[:fridge_session] = 'foobar'
       controller.session_token
-      expect(cookies.deleted?(:fridge_session, domain: :all)).to be true
+      expect(cookies.deleted?(:fridge_session, domain: 'auth.aptible.com'))
+        .to be true
     end
 
     it 'should return nil on error' do
@@ -211,7 +212,7 @@ describe Fridge::RailsHelpers do
     it 'are configurable' do
       Fridge.configuration.cookie_options = { foobar: true }
       options = controller.fridge_cookie_options
-      expect(options[:domain]).to eq :all
+      expect(options[:domain]).to eq 'auth.aptible.com'
       expect(options[:foobar]).to eq true
     end
   end
