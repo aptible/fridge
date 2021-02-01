@@ -126,7 +126,11 @@ module Fridge
     end
 
     def auth_domain
-      Aptible::Auth.configuration.root_url.sub(%r{^https?://}, '')
+      domain = URI.parse(Aptible::Auth.configuration.root_url).host
+
+      # On localhost we fall back to the default setting b/c browsers won't set
+      # cookies if localhost is named
+      domain == 'localhost' ? :all : domain
     rescue StandardError
       'auth.aptible.com'
     end
