@@ -215,5 +215,25 @@ describe Fridge::RailsHelpers do
       expect(options[:domain]).to eq 'auth.aptible.com'
       expect(options[:foobar]).to eq true
     end
+
+    it 'restricts cookies to the specific subdomain' do
+      auth = class_double('Aptible::Auth').as_stubbed_const
+      allow(auth).to receive_message_chain(:configuration, :root_url) do
+        'https://auth-bob.aptible-sandbox.com'
+      end
+
+      options = controller.fridge_cookie_options
+      expect(options[:domain]).to eq 'auth-bob.aptible-sandbox.com'
+    end
+
+    it 'handles local development using defaults' do
+      auth = class_double('Aptible::Auth').as_stubbed_const
+      allow(auth).to receive_message_chain(:configuration, :root_url) do
+        'https://localhost:4000'
+      end
+
+      options = controller.fridge_cookie_options
+      expect(options[:domain]).to eq :all
+    end
   end
 end
