@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'activesupport', '~> 4.0'
-gem 'nokogiri', '~> 1.9.1'
+gem 'activesupport'
+gem 'nokogiri'
 
 # Specify your gem's dependencies in fridge.gemspec
 gemspec
