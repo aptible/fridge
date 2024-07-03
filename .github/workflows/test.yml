@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        RUBY_VERSION: ["2.5", "2.6", "3.1"]
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install Ruby ${{ matrix.RUBY_VERSION }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Run Tests
+        run: bundle exec rake
+
+  results:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Final Results
+    needs: [test]
+    steps:
+      - run: exit 1
+        # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+               contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+          }}
