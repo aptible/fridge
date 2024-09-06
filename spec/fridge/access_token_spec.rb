@@ -79,21 +79,22 @@ describe Fridge::AccessToken do
     end
 
     it 'should be verifiable with the application public key' do
-      expect { JWT.decode(subject.serialize, public_key) }.not_to raise_error
+      expect { JWT.decode(subject.serialize, public_key, true, algorithm: 'RS512') }
+        .not_to raise_error
     end
 
     it 'should be tamper-resistant' do
       header, _, signature = subject.serialize.split('.')
-      tampered_claim = JWT.base64url_encode({ foo: 'bar' }.to_json)
+      tampered_claim = JWT::Base64.url_encode({ foo: 'bar' }.to_json)
       tampered_token = [header, tampered_claim, signature].join('.')
 
       expect do
-        JWT.decode(tampered_token, public_key)
+        JWT.decode(tampered_token, public_key, true, algorithm: 'RS512')
       end.to raise_error JWT::DecodeError
     end
 
     it 'should represent :exp in seconds since the epoch' do
-      hash, = JWT.decode(subject.serialize, public_key)
+      hash, = JWT.decode(subject.serialize, public_key, true, algorithm: 'RS512')
       expect(hash['exp']).to be_a Integer
     end
 
@@ -133,7 +134,7 @@ describe Fridge::AccessToken do
       # test that, although eventually we'll want to see symbols back.
       actor_s = { 'sub' => 'foo', 'username' => 'test',
                   'act' => { 'sub' => 'bar' } }
-      hash, = JWT.decode(subject.serialize, public_key)
+      hash, = JWT.decode(subject.serialize, public_key, true, algorithm: 'RS512')
       expect(hash['act']).to eq(actor_s)
 
       # Now, check that we properly get symbols back
