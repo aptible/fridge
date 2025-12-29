@@ -7,18 +7,20 @@ jobs:
     name: Push gem to RubyGems.org
     runs-on: ubuntu-latest
 
-    permissions:
+    permissions: 
         id-token: write
         contents: write
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           persist-credentials: false
       - name: Set up Ruby
-        uses: ruby/setup-ruby@a4effe49ee8ee5b8b5091268c473a4628afb5651
+        uses: ruby/setup-ruby@211ffaaa5f8dda97e9e8bca4e70d0fbaf2f8c41c
         with:
           bundler-cache: false
-          ruby-version: "3.4"
+          ruby-version: "3.3"
 
-      - uses: rubygems/release-gem@a25424ba2ba8b387abc8ef40807c2c85b96cbe32
+      - run: bundle install
+
+      - uses: rubygems/release-gem@1c162a739e8b4cb21a676e97b087e8268d8fc40b
