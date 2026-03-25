@@ -3,7 +3,7 @@ require 'jwt'
 module Fridge
   class AccessToken
     attr_accessor :id, :issuer, :subject, :scope, :expires_at, :actor,
-                  :jwt, :attributes
+                  :kid, :jwt, :attributes
 
     def initialize(jwt_or_options = nil)
       options = case jwt_or_options
@@ -15,7 +15,7 @@ module Fridge
                 else {}
                 end
 
-      [:id, :issuer, :subject, :scope, :expires_at, :actor].each do |key|
+      [:id, :issuer, :subject, :scope, :expires_at, :actor, :kid].each do |key|
         send "#{key}=", options.delete(key)
       end
       self.attributes = options
@@ -40,13 +40,14 @@ module Fridge
       end
       h.merge!(attributes)
       h = encode_for_jwt(h)
-      JWT.encode(h, private_key, algorithm)
+      JWT.encode(h, private_key, algorithm, { kid: kid }.compact)
     rescue StandardError
       raise SerializationError, 'Invalid private key or signing algorithm'
     end
 
     def decode_and_verify(jwt)
-      payload, _header = JWT.decode(jwt, public_key, true, algorithm: algorithm)
+      payload, header = JWT.decode(jwt, public_key, true, algorithm: algorithm)
+      self.kid = header['kid']
       decode_from_jwt(payload)
     rescue JWT::ExpiredSignature => e
       raise ExpiredToken, e.message
