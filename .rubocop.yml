@@ -1,0 +1,2 @@
+inherit_from:
+  - https://raw.githubusercontent.com/aptible/dryer-lint/main/rspec_3_plus/.rubocop.base.yml

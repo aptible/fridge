@@ -1,3 +1,11 @@
+# frozen_string_literal: true
+
+module Aptible
+  module Auth
+    def self.configuration; end
+  end
+end
+
 module Rails
   class App
     def env_config

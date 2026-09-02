@@ -1,6 +1,9 @@
+# frozen_string_literal: true
+
 require 'jwt'
 
 module Fridge
+  # Represents a JWT-based access token with encoding and decoding support.
   class AccessToken
     attr_accessor :id, :issuer, :subject, :scope, :expires_at, :actor,
                   :jwt, :attributes
@@ -15,7 +18,7 @@ module Fridge
                 else {}
                 end
 
-      [:id, :issuer, :subject, :scope, :expires_at, :actor].each do |key|
+      %i[id issuer subject scope expires_at actor].each do |key|
         send "#{key}=", options.delete(key)
       end
       self.attributes = options
@@ -35,7 +38,7 @@ module Fridge
 
     def encode_and_sign
       h = {}
-      [:id, :issuer, :subject, :scope, :expires_at, :actor].each do |key|
+      %i[id issuer subject scope expires_at actor].each do |key|
         h[key] = send(key)
       end
       h.merge!(attributes)
@@ -63,7 +66,7 @@ module Fridge
     end
 
     def expired?
-      expires_at.nil? || expires_at < Time.now
+      expires_at.nil? || expires_at < Time.zone.now
     end
 
     def private_key
@@ -107,7 +110,7 @@ module Fridge
     end
 
     def validate_parameters!
-      [:subject, :expires_at].each do |attribute|
+      %i[subject expires_at].each do |attribute|
         next if send(attribute)
 
         raise SerializationError, "Missing attribute: #{attribute}"
@@ -159,12 +162,12 @@ module Fridge
         scope: hash.delete('scope')
       }.delete_if { |_, v| v.nil? }
 
-      hash.delete('exp').tap { |e| out[:expires_at] = Time.at(e) if e }
+      hash.delete('exp').tap { |e| out[:expires_at] = Time.zone.at(e) if e }
       hash.delete('act').tap { |a| out[:actor] = decode_from_jwt(a) if a }
 
       # Extra attributes
       hash.delete_if { |_, v| v.nil? }
-      hash = Hash[hash.map { |k, v| [k.to_sym, v] }]
+      hash = hash.to_h { |k, v| [k.to_sym, v] }
       out.merge!(hash)
 
       out

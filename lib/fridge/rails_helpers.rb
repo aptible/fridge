@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 module Fridge
+  # Rails controller helpers for bearer token and session cookie management.
   module RailsHelpers
     extend ActiveSupport::Concern
 
@@ -8,15 +11,15 @@ module Fridge
     end
 
     def token_scope
-      current_token.scope if current_token
+      current_token&.scope
     end
 
     def token_subject
-      current_token.subject if current_token
+      current_token&.subject
     end
 
     def token_actor
-      current_token.actor if current_token
+      current_token&.actor
     end
 
     def current_token
@@ -29,15 +32,15 @@ module Fridge
 
     def bearer_token
       header = request.env['HTTP_AUTHORIZATION']
-      header.gsub(/^Bearer /, '') unless header.nil?
+      header&.gsub(/^Bearer /, '')
     end
 
     def session_subject
-      session_token.subject if session_token
+      session_token&.subject
     end
 
     def session_actor
-      session_token.actor if session_token
+      session_token&.actor
     end
 
     def session_token

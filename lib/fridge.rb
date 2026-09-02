@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'gem_config'
 
 require 'fridge/version'
@@ -8,6 +10,7 @@ require 'fridge/expired_token'
 
 require 'fridge/railtie' if defined?(Rails)
 
+# Fridge provides JWT token validation for distributed resource servers.
 module Fridge
   include GemConfig::Base
 
@@ -15,10 +18,7 @@ module Fridge
     has :private_key, classes: [String]
     has :public_key, classes: [String]
 
-    # rubocop:disable Style/PercentLiteralDelimiters
     has :signing_algorithm, values: %w[RS512 RS256], default: 'RS512'
-    # rubocop:enable Style/PercentLiteralDelimiters
-
     # A validator must raise an exception or return a false value for an
     # invalid token
     has :validator, classes: [Proc], default: ->(token) { token.valid? }
