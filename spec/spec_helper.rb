@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
@@ -19,5 +21,6 @@ Dir["#{File.dirname(__FILE__)}/shared/**/*.rb"].each do |file|
 end
 
 RSpec.configure do |config|
+  config.before { Time.zone = 'UTC' }
   config.before { Fridge.configuration.reset }
 end

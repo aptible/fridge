@@ -1,10 +1,13 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'fixtures/app'
 
 describe Fridge::RailsHelpers do
   include RSpec::Rails::ControllerExampleGroup
 
-  controller(ActionController::Base) { include Fridge::RailsHelpers }
+  helpers = described_class
+  controller(ActionController::Base) { include helpers }
 
   let(:organization_url) do
     "https://auth.aptible.com/users/#{SecureRandom.uuid}"
@@ -15,15 +18,17 @@ describe Fridge::RailsHelpers do
   let(:options) do
     {
       subject: "https://auth.aptible.com/users/#{SecureRandom.uuid}",
-      expires_at: Time.now + 3600
+      expires_at: Time.zone.now + 3600
     }
   end
   let(:access_token) { Fridge::AccessToken.new(options) }
 
   let(:cookies) { controller.send(:cookies) }
 
-  before { Fridge.configuration.private_key = private_key.to_s }
-  before { Fridge.configuration.public_key = public_key.to_s }
+  before do
+    Fridge.configuration.private_key = private_key.to_s
+    Fridge.configuration.public_key = public_key.to_s
+  end
 
   describe '#bearer_token' do
     it 'returns the bearer token from the Authorization: header' do
@@ -64,26 +69,26 @@ describe Fridge::RailsHelpers do
   describe '#current_token' do
     before { controller.stub(:bearer_token) { access_token.serialize } }
 
-    it 'should raise an error if the token is not a valid JWT' do
+    it 'raises an error if the token is not a valid JWT' do
       controller.stub(:bearer_token) { 'foobar' }
       expect { controller.current_token }.to raise_error Fridge::InvalidToken
     end
 
-    it 'should raise an error if the token has expired' do
-      access_token.expires_at = Time.now - 3600
+    it 'raises an error if the token has expired' do
+      access_token.expires_at = Time.zone.now - 3600
       expect { controller.current_token }.to raise_error Fridge::InvalidToken
     end
 
-    it 'should raise an error if custom validation fails' do
+    it 'raises an error if custom validation fails' do
       Fridge.configuration.validator = ->(_) { false }
       expect { controller.current_token }.to raise_error Fridge::InvalidToken
     end
 
-    it 'should not raise an error if a valid token is passed' do
+    it 'does not raise an error if a valid token is passed' do
       expect { controller.current_token }.not_to raise_error
     end
 
-    it 'should return the token if a valid token is passed' do
+    it 'returns the token if a valid token is passed' do
       expect(controller.current_token.id).to eq access_token.id
     end
   end
@@ -101,19 +106,19 @@ describe Fridge::RailsHelpers do
   end
 
   describe '#session_token' do
-    it 'should delete all cookies on error' do
+    it 'deletes all cookies on error' do
       cookies[:fridge_session] = 'foobar'
       controller.session_token
       expect(cookies.deleted?(:fridge_session, domain: 'auth.aptible.com'))
         .to be true
     end
 
-    it 'should return nil on error' do
+    it 'returns nil on error' do
       cookies[:fridge_session] = 'foobar'
       expect(controller.session_token).to be_nil
     end
 
-    it 'should return the token stored in :fridge_session' do
+    it 'returns the token stored in :fridge_session' do
       cookies[:fridge_session] = access_token.serialize
       expect(controller.session_token.id).to eq access_token.id
     end
@@ -121,12 +126,12 @@ describe Fridge::RailsHelpers do
     context 'with a non-:read scope' do
       before { options.merge!(scope: 'manage') }
 
-      it 'should downgrade the token' do
+      it 'downgrades the token' do
         cookies[:fridge_session] = access_token.serialize
         expect(controller.session_token.scope).to eq 'read'
       end
 
-      it 'should not change the validity of a token' do
+      it 'does not change the validity of a token' do
         cookies[:fridge_session] = access_token.serialize
         expect(controller.session_token).to be_valid
       end
@@ -134,38 +139,38 @@ describe Fridge::RailsHelpers do
   end
 
   describe '#validate_token' do
-    it 'should return false if the token is invalid' do
+    it 'returns false if the token is invalid' do
       Fridge.configuration.validator = ->(_) { false }
       expect(controller.validate_token(access_token)).to be false
     end
 
-    it 'should return false if the token validator fails' do
+    it 'returns false if the token validator fails' do
       Fridge.configuration.validator = ->(_) { raise 'Foobar' }
       expect(controller.validate_token(access_token)).to be false
     end
 
-    it 'should return the token if valid' do
+    it 'returns the token if valid' do
       Fridge.configuration.validator = ->(_) { true }
       expect(controller.validate_token(access_token)).to eq access_token
     end
   end
 
-  describe '#validate_token' do
-    it 'should raise an exception if the token is invalid' do
+  describe '#validate_token!' do
+    it 'raises an exception if the token is invalid' do
       Fridge.configuration.validator = ->(_) { false }
       expect { controller.validate_token!(access_token) }
         .to raise_error Fridge::InvalidToken
     end
 
-    it 'should return the token if valid' do
+    it 'returns the token if valid' do
       Fridge.configuration.validator = ->(_) { true }
       expect(controller.validate_token!(access_token)).to eq access_token
     end
   end
 
   describe '#sessionize_token' do
-    it 'should set a session cookie' do
-      Rails.stub_chain(:env, :development?) { false }
+    it 'sets a session cookie' do
+      allow(Rails).to receive(:env).and_return(double(development?: false))
       controller.sessionize_token(access_token)
       expect(cookies[:fridge_session]).to eq access_token.serialize
     end
@@ -179,16 +184,16 @@ describe Fridge::RailsHelpers do
   end
 
   describe '#write_shared_cookie' do
-    before { Rails.stub_chain(:env, :development?) { false } }
+    before { allow(Rails).to receive(:env).and_return(double(development?: false)) }
 
-    it 'should save cookie' do
+    it 'saves cookie' do
       controller.write_shared_cookie(:organization_url, organization_url)
       expect(cookies[:organization_url]).to eq organization_url
     end
   end
 
   describe '#read_shared_cookie' do
-    it 'should read cookie' do
+    it 'reads cookie' do
       cookies[:organization_url] = { value: organization_url }
       expect(controller.read_shared_cookie(:organization_url)).to(
         eq organization_url
@@ -197,9 +202,9 @@ describe Fridge::RailsHelpers do
   end
 
   describe '#delete_shared_cookie' do
-    before { Rails.stub_chain(:env, :development?) { false } }
+    before { allow(Rails).to receive(:env).and_return(double(development?: false)) }
 
-    it 'should delete cookie' do
+    it 'deletes cookie' do
       controller.write_shared_cookie(:organization_url, organization_url)
       controller.delete_shared_cookie(:organization_url)
       expect(cookies[:organization_url]).to be_nil
@@ -207,30 +212,30 @@ describe Fridge::RailsHelpers do
   end
 
   describe '#fridge_cookie_options' do
-    before { Rails.stub_chain(:env, :development?) { false } }
+    before { allow(Rails).to receive(:env).and_return(double(development?: false)) }
 
     it 'are configurable' do
       Fridge.configuration.cookie_options = { foobar: true }
       options = controller.fridge_cookie_options
       expect(options[:domain]).to eq 'auth.aptible.com'
-      expect(options[:foobar]).to eq true
+      expect(options[:foobar]).to be true
     end
 
     it 'restricts cookies to the specific subdomain' do
-      auth = class_double('Aptible::Auth').as_stubbed_const
-      allow(auth).to receive_message_chain(:configuration, :root_url) do
-        'https://auth-bob.aptible-sandbox.com'
-      end
+      auth = class_double(Aptible::Auth).as_stubbed_const
+      allow(auth).to receive(:configuration).and_return(
+        double(root_url: 'https://auth-bob.aptible-sandbox.com')
+      )
 
       options = controller.fridge_cookie_options
       expect(options[:domain]).to eq 'auth-bob.aptible-sandbox.com'
     end
 
     it 'handles local development using defaults' do
-      auth = class_double('Aptible::Auth').as_stubbed_const
-      allow(auth).to receive_message_chain(:configuration, :root_url) do
-        'https://localhost:4000'
-      end
+      auth = class_double(Aptible::Auth).as_stubbed_const
+      allow(auth).to receive(:configuration).and_return(
+        double(root_url: 'https://localhost:4000')
+      )
 
       options = controller.fridge_cookie_options
       expect(options[:domain]).to eq :all

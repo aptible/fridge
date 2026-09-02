@@ -1,0 +1,6 @@
+services:
+  fridge:
+    build:
+      context: .
+    volumes:
+      - .:/app
